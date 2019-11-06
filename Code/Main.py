@@ -4,6 +4,8 @@ from tkinter import font as tfont
 from tkinter.messagebox import showinfo, showerror
 import platform
 
+from SerialPortConnection.py import *
+
 
 class App(tk.Tk):
     '''App initialisatie'''
@@ -23,7 +25,7 @@ class App(tk.Tk):
             self.tempfont = tfont.Font(size=14)
         else:
             self.tfont = tfont.Font(size=11, weight='bold')
-            self.tempfont = tfont.Font(size=11, fg="grey40")
+            self.tempfont = tfont.Font(size=11)
 
         # Settings
         self.temp_rollout = 20

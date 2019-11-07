@@ -23,7 +23,7 @@ print(avg)
 # Pak 20 keer de gemiddelde waarde (anders gaat hij zeuren)
 avg_list = []
 for i in range(20):
-    avg_list.append(avg)
+    avg_list.append(avg-0.025)
 
 # Teken de lijnen
 plot.plot(x, y, color="blue",  linestyle="-")

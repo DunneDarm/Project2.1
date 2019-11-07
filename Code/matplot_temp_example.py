@@ -11,8 +11,7 @@ plot = figure.add_subplot(1, 1, 1)
 
 # Lijsten van x en y coördinaten
 x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-y = [19, 20, 20, 21, 20, 20, 20, 21, 20, 19,
-     19, 18, 20, 21, 20, 20, 20, 21, 21, 20]
+y = [21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 22, 22, 23, 24, 24, 19]
 x = x[0:20]  # Pak alleen 20 waarden
 y = y[0:20]
 
@@ -35,19 +34,19 @@ canvas.get_tk_widget().grid(row=0, column=0)
 
 # Labels
 title = tk.Label(text="Gemeten temperatuur", font=(
-    None, 18, 'bold'))
+    None, 18, 'bold'), bg = "white")
 title.place(x=400, y=20, anchor="center")
 
-blue_line = tk.Label(text="Gemeten temperatuur", fg="blue")
+blue_line = tk.Label(text="Gemeten temperatuur", fg="blue", bg = "white")
 blue_line.place(x=725, y=15, anchor="e")
 
-red_line = tk.Label(text="Gemiddelde temperatuur", fg="red")
+red_line = tk.Label(text="Gemiddelde temperatuur", fg="red", bg = "white")
 red_line.place(x=725, y=40, anchor="e")
 
-y_label = tk.Label(text="Temperatuur")
+y_label = tk.Label(text="Temperatuur", bg = "white")
 y_label.place(x=15, y=15)
 
-x_label = tk.Label(text="Meetmoment")
+x_label = tk.Label(text="Meetmoment", bg = "white")
 x_label.place(x=725, y=485, anchor="e")
 
 root.mainloop()

@@ -17,7 +17,7 @@ Centrale:
 Moet de Rolluiken kunnen bedienen.
 Instellingen kan veranderen.
 Met grafieken de data bekijken.
-Sensor data van ultrasoon hoeft niet veergeven te worden. I.p.v. ddeze data moet de status van het zonneschrm of rolluik weer gegeven. (Opgerold/uitgerold)
+Sensor data van ultrasoon hoeft niet veergeven te worden. I.p.v. deze data moet de status van het zonneschrm of rolluik weer gegeven. (Opgerold/uitgerold)
 
 Centrale kan via usb comuniceren met besturigseenheden.
 Kan de besturingseenhenden identificeren en daardoor de bijbehorende sensoren uitlezen en in een grafiek tonen.
@@ -27,14 +27,7 @@ Rolluik moeten los van elkaar kunnen worden aangepast op de besturigseenheden(af
 Dit moet met knoppen gedaan worden.
 
 Er moeten 5 besturingseenheden aangesloten kunnen worden.
-De alleen aangesloten aarduino's moeten getoond worden.
-
-Besturingseenheden:
-Scherm uitgerold = rood ledje
-Scherm opgerold = Groen ledje
-Tijdens het rollen knippert er een Geel ledje.
-Oprollen is geel knipperen en groen ledje
-Uitrollen is geel knipperen en rood00 ledje
+Alleen de aangesloten arduino's moeten getoond worden.
 
 Inleveren:
 Functioneel ontwerp
@@ -48,3 +41,18 @@ Software besturingseenheden.
 Presentatie/demonstratie van de eindproducten.
 
 Er moet ook iets gedaan worden voor samenwerken!
+
+
+
+
+
+
+
+
+Klaar?
+Besturingseenheden:
+Scherm uitgerold = rood ledje
+Scherm opgerold = Groen ledje
+Tijdens het rollen knippert er een Geel ledje.
+Oprollen is geel knipperen en groen ledje
+Uitrollen is geel knipperen en rood ledje

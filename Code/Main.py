@@ -9,6 +9,7 @@ import threading
 import time
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plotting
 import matplotlib
 matplotlib.use("TkAgg")
 
@@ -41,11 +42,11 @@ class App(tk.Tk):
         self.light_rollout = 18
         self.light_pullup = 2
         self.max_rollout = 140
-        self.cur_temp = "Unknown"
+        self.cur_temp = "unknown"
 
         self.frames = {}
         for frame_class in (Login, Home, ControlPanel, Settings, ViewData, Temperature,
-                            Distance, Lightintensity):
+                            Distance, Lightintensity, ConnectedUnits):
             frame = frame_class(container, self)
             self.frames[frame_class] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -57,10 +58,6 @@ class App(tk.Tk):
         '''Verander van frame in de GUI'''
         frame = self.frames[page]
         frame.tkraise()
-
-    def setTemp(self):
-        self.cur_temp = currenttemp(ser.read(3))
-
 
 class Login(tk.Frame):
     '''Bevat het (dummy) login scherm'''
@@ -303,7 +300,7 @@ class Settings(tk.Frame):
 
         min_temp_label = tk.Label(
             self, text="Scherm optrekken bij temperatuur ...",
-            font=(None, 14, 'italic'), bg="Azure")
+            font=(None, 12, 'italic'), bg="Azure")
         min_temp_label.place(x=90, y=50)
 
         # Maximale temperatuur
@@ -312,7 +309,7 @@ class Settings(tk.Frame):
 
         max_temp_label = tk.Label(
             self, text="Scherm uitrollen bij temperatuur ...",
-            font=(None, 14, 'italic'), bg="Azure")
+            font=(None, 12, 'italic'), bg="Azure")
         max_temp_label.place(x=90, y=90)
 
         # Minimale lichtintensiteit
@@ -321,7 +318,7 @@ class Settings(tk.Frame):
 
         min_light_label = tk.Label(
             self, text="Scherm optrekken bij lichtintensiteit ...",
-            font=(None, 14, 'italic'), bg="Azure")
+            font=(None, 12, 'italic'), bg="Azure")
         min_light_label.place(x=90, y=130)
 
         # Maximale lichtintensiteit
@@ -330,7 +327,7 @@ class Settings(tk.Frame):
 
         max_light_label = tk.Label(
             self, text="Scherm uitrollen bij lichtintensiteit ...",
-            font=(None, 14, 'italic'), bg="Azure")
+            font=(None, 11, 'italic'), bg="Azure")
         max_light_label.place(x=90, y=170)
 
         # Maximaal uitrollen scherm
@@ -339,7 +336,7 @@ class Settings(tk.Frame):
 
         max_rollout_label = tk.Label(
             self, text="Hoever mag het zonnescherm uitgerold worden?",
-            font=(None, 14, 'italic'), bg="Azure")
+            font=(None, 11, 'italic'), bg="Azure")
         max_rollout_label.place(x=90, y=210)
 
         if platform.system() == "Darwin":
@@ -355,6 +352,12 @@ class Settings(tk.Frame):
                 self, text="⬅ Terug naar homepagina", highlightbackground="white smoke",
                 command=lambda: controller.show_frame(Home))
             back_button.place(x=15, y=465)
+
+            # Naar Besturings eenheden
+            Arduino_button = tk.Button(
+                self, text="Besturingseenheden", highlightbackground="white smoke",
+                command=lambda: controller.show_frame(ConnectedUnits))
+            Arduino_button.place(x=351, y=465)
 
             # Uitloggen button
             logout_button = tk.Button(
@@ -373,6 +376,12 @@ class Settings(tk.Frame):
                 self, text="⬅ Terug naar homepagina", highlightbackground="white smoke",
                 command=lambda: controller.show_frame(Home))
             back_button.place(x=15, y=465)
+
+            # Naar Besturings eenheden
+            Arduino_button = tk.Button(
+                self, text="Besturingseenheden", highlightbackground="white smoke",
+                command=lambda: controller.show_frame(ConnectedUnits))
+            Arduino_button.place(x=351, y=465)
 
             # Uitloggen button
             logout_button = tk.Button(
@@ -471,7 +480,82 @@ class ViewData(tk.Frame):
 class Temperature(tk.Frame):
     '''Bevat een grafiek van de gemeten temperatuur data'''
 
-    def __init__(self, parent, controller, Temp = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+        self.rollout = controller.temp_rollout
+        self.temp = TempList
+
+        self.figure = Figure(figsize=(8, 5), dpi=100)
+        self.plt = self.figure.add_subplot(1, 1, 1)
+
+        #De waarden die in de grafiek moeten
+        self.x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        y = self.temp
+
+        #Basic plot for when there are no new values
+        self.line = self.plt.plot(self.x, y, color="blue", linestyle="-")[0]
+
+        #Limit de waarden tot 20 wanneer er meer zijnd.
+        self.x = self.x[0:20]  # Pak alleen 20 waarden
+        y = y[0:20]
+
+        self.canvas = FigureCanvasTkAgg(self.figure, self)
+
+        self.canvas.get_tk_widget().grid(row=0, column=0)
+
+        # Labels
+        title = tk.Label(self, text="Gemeten temperatuur", font=(
+            None, 18, 'bold'))
+        title.place(x=400, y=20, anchor="center")
+
+        blue_line = tk.Label(self, text="Gemeten temperatuur", fg="blue")
+        blue_line.place(x=725, y=15, anchor="e")
+
+        #Overbodig?
+        #red_line = tk.Label(self, text="Gemiddelde temperatuur", fg="red")
+        #red_line.place(x=725, y=40, anchor="e")
+
+        y_label = tk.Label(self, text="Temperatuur")
+        y_label.place(x=15, y=15)
+
+        x_label = tk.Label(self, text="Meetmoment")
+        x_label.place(x=725, y=485, anchor="e")
+
+        # Homepagina button
+        back_button = tk.Button(
+            self, text="⬅ Bekijk data", highlightbackground="white smoke",
+            command=lambda: controller.show_frame(ViewData))
+        back_button.place(x=15, y=465)
+
+        # Refresh button
+        refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=self.TempRefresh)
+        refresh_button.place(x=200, y=10)
+
+    def TempRefresh(self):
+        global TempList
+        self.temp = [1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        self.temp = self.temp[0:20]
+
+        #self.plt.clear()
+        #self.plt.plot(self.x, self.temp, color="blue", linestyle="-")
+        #self.canvas.draw()
+
+        self.line.set_ydata(self.temp)
+        #self.figure.set_xlim([0, 20])
+
+        self.canvas.draw()
+
+        print("Reached")
+        #self.plt.draw()
+
+        Temperature.update(self)
+        #Temperature.update_idletasks(self)
+
+class Distance(tk.Frame):
+    '''Bevat een grafiek van de uitgerolde afstand van het zonnescherm'''
+
+    def __init__(self, parent, controller, Temp = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         self.rollout = controller.temp_rollout
@@ -489,33 +573,28 @@ class Temperature(tk.Frame):
 
         avg_list = []
         for i in range(20):
-            avg_list.append(avg-0.025)
+            avg_list.append(avg)
 
         # Teken de lijnen
         plot.plot(x, y, color="blue",  linestyle="-")
-        plot.plot(x, avg_list, color="red", linestyle="-")
 
         canvas = FigureCanvasTkAgg(figure, self)
         canvas.get_tk_widget().grid(row=0, column=0)
 
         # Labels
-        title = tk.Label(self, text="Gemeten temperatuur", font=(
+        title = tk.Label(self, text="Huidige afstand", font=(
             None, 18, 'bold'))
         title.place(x=400, y=20, anchor="center")
 
-        blue_line = tk.Label(self, text="Gemeten temperatuur", fg="blue")
-        blue_line.place(x=725, y=15, anchor="e")
+        blue_line = tk.Label(self, text="Huidige afstand", fg="blue")
+        blue_line.place(x=700, y=20, anchor="e")
 
-        red_line = tk.Label(self, text="Gemiddelde temperatuur", fg="red")
-        red_line.place(x=725, y=40, anchor="e")
-
-        y_label = tk.Label(self, text="Temperatuur")
-        y_label.place(x=15, y=15)
+        y_label = tk.Label(self, text="Afstand in cm")
+        y_label.place(x=15, y=30)
 
         x_label = tk.Label(self, text="Meetmoment")
         x_label.place(x=725, y=485, anchor="e")
 
-        # Homepagina button
         back_button = tk.Button(
             self, text="⬅ Bekijk data", highlightbackground="white smoke",
             command=lambda: controller.show_frame(ViewData))
@@ -524,109 +603,6 @@ class Temperature(tk.Frame):
         # Refresh button
         refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=Temperature.update(self))
         refresh_button.place(x=200, y=10)
-
-    def TempSetter(self):
-        self.temp = TempList
-
-    def TempUpdate(self):
-        Temperature.update(self)
-
-
-class Distance(tk.Frame):
-    '''Bevat een grafiek van de uitgerolde afstand van het zonnescherm'''
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-        self.max_rollout = controller.max_rollout
-
-        canvas = tk.Canvas(self, width=800, height=500)
-        canvas.pack()
-
-        for i in range(24):
-            x_axis = 50 + (i * 25)
-            canvas.create_line(x_axis, 450, x_axis, 50, width=1, dash=(2, 5))
-            canvas.create_text(x_axis, 450, text='%d' % (1 * i), anchor=tk.N)
-
-        for i in range(17):
-            y_axis = 450 - (i * 25)
-            canvas.create_line(50, y_axis, 625, y_axis, width=1, dash=(2, 5))
-            canvas.create_text(40, y_axis, text='%d' % (10 * i), anchor=tk.E)
-
-        # Lijnen
-        def val_to_y(value):
-            '''Retourneert de juiste y-waarde die kan worden gebruikt in de grafiek'''
-            return value-40  # TODO
-
-        canvas.create_line(50, 450, 625, 450, width=2)  # x-as
-        canvas.create_line(50, 450, 50, 50, width=2)  # y-as
-        canvas.create_line(650, 0, 650, 500, width=2,
-                           fill="grey")  # Scheidingslijn
-        canvas.create_line(650, 200, 800, 200, width=2,
-                           fill="grey")  # Scheidingslijn2
-        canvas.create_line(50, val_to_y(self.max_rollout),
-                           650, val_to_y(self.max_rollout), fill="red")
-
-        # Grafiek labels
-        title_label = tk.Label(
-            self, text="Gemeten afstand", font=(None, 18, 'bold'))
-        title_label.place(x=325, y=25, anchor="center")
-
-        yaxis_label = tk.Label(self, text="Afstand")
-        yaxis_label.place(x=50, y=25, anchor="center")
-
-        xaxis_label = tk.Label(self, text="Meetmoment")
-        xaxis_label.place(x=550, y=470)
-
-        max_label = tk.Label(
-            self, text="Uitrolgrens", fg="red", font=(None, 14, 'bold'))
-        max_label.place(x=725, y=50, anchor="center")
-
-        measured_label = tk.Label(
-            self, text="Gemeten waarde", fg="blue", font=(None, 14, 'bold'))
-        measured_label.place(x=725, y=150, anchor="center")
-
-        if platform.system() == "Darwin":
-            # Lichtintensiteit button
-            lightintensity_button = tk.Button(
-                self, text="Bekijk lichtintensiteit", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Lightintensity))
-            lightintensity_button.config(height=3, width=15)
-            lightintensity_button.place(x=725, y=275, anchor="center")
-
-            # Temperatuur button
-            temp_button = tk.Button(
-                self, text="Bekijk temperatuur", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Temperature))
-            temp_button.config(height=3, width=15)
-            temp_button.place(x=725, y=350, anchor="center")
-
-            # Homepagina button
-            back_button = tk.Button(
-                self, text="⬅ Terug naar home", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Home))
-            back_button.place(x=725, y=465, anchor="center")
-        else:
-            # Lichtintensiteit button
-            lightintensity_button = tk.Button(
-                self, text="Bekijk lichtintensiteit", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Lightintensity))
-            lightintensity_button.config(height=2, width=10)
-            lightintensity_button.place(x=725, y=275, anchor="center")
-
-            # Temperatuur button
-            temp_button = tk.Button(
-                self, text="Bekijk temperatuur", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Temperature))
-            temp_button.config(height=2, width=10)
-            temp_button.place(x=725, y=350, anchor="center")
-
-            # Homepagina button
-            back_button = tk.Button(
-                self, text="⬅ Terug naar home", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Home))
-            back_button.place(x=725, y=465, anchor="center")
-
 
 class Lightintensity(tk.Frame):
     '''Bevat een grafiek van de gemeten lichtintesiteit data'''
@@ -680,53 +656,13 @@ class Lightintensity(tk.Frame):
         xaxis_label = tk.Label(self, text="Meetmoment")
         xaxis_label.place(x=550, y=470)
 
-        max_label = tk.Label(self, text="Uitrolgrens",
-                             fg="green", font=(None, 14, 'bold'))
-        max_label.place(x=725, y=50, anchor="center")
-
-        min_label = tk.Label(self, text="Oprolgrens",
-                             fg="red", font=(None, 14, 'bold'))
-        min_label.place(x=725, y=100, anchor="center")
-
-        measured_label = tk.Label(
-            self, text="Gemeten waarde", fg="blue", font=(None, 14, 'bold'))
-        measured_label.place(x=725, y=150, anchor="center")
-
         if platform.system() == "Darwin":
-            # Temperatuur button
-            temp_button = tk.Button(
-                self, text="Bekijk temperatuur", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Temperature))
-            temp_button.config(height=3, width=15)
-            temp_button.place(x=725, y=275, anchor="center")
-
-            # Afstand button
-            distance_button = tk.Button(
-                self, text="Bekijk afstand", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Distance))
-            distance_button.config(height=3, width=15)
-            distance_button.place(x=725, y=350, anchor="center")
-
             # Homepagina button
             back_button = tk.Button(
                 self, text="⬅ Terug naar home", highlightbackground="white smoke",
                 command=lambda: controller.show_frame(Home))
             back_button.place(x=725, y=465, anchor="center")
         else:
-            # Temperatuur button
-            temp_button = tk.Button(
-                self, text="Bekijk temperatuur", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Temperature))
-            temp_button.config(height=2, width=10)
-            temp_button.place(x=725, y=275, anchor="center")
-
-            # Afstand button
-            distance_button = tk.Button(
-                self, text="Bekijk afstand", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Distance))
-            distance_button.config(height=2, width=10)
-            distance_button.place(x=725, y=350, anchor="center")
-
             # Homepagina button
             back_button = tk.Button(
                 self, text="⬅ Terug naar home", highlightbackground="white smoke",
@@ -739,59 +675,75 @@ class ConnectedUnits(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        self.rollout = controller.temp_rollout
+        self.config(bg="Azure")
+        connectedlabels = []
 
-        canvas = tk.Canvas(self, width=800, height=500)
+        title_Unit_Label = tk.Label(self, text="Aangesloten eenheden", font=(
+            None, 18, 'bold'), bg="Azure")
+        title_Unit_Label.pack(side="top", fill="x")
+
+        canvas = tk.Canvas(self, width=800, height=500, bg="Azure")
         canvas.pack()
 
-        figure = Figure(figsize=(8, 5), dpi=100)
+        #figure = Figure(figsize=(8, 5), dpi=100)
 
-        # Canvas
-        canvas = FigureCanvasTkAgg(figure, controller)
-        canvas.get_tk_widget()
-
-        # Labels
-        title = tk.Label(text="Aangesloten eenheden", font=(
-            None, 18, 'bold'), bg="white")
-        title.place(x=400, y=20, anchor="center")
+        for i in range(0, len(getPorts()) + 1):
+            if i < len(getPorts()):
+                connectedlabels.append(tk.Label(self, text= getPorts()[i], bg= "Azure"))
+                connectedlabels[i].place(x=300, y=(180 + (i * 50)))
+            else:
+                break
 
         if platform.system() == "Darwin":
             # Homepagina button
             back_button = tk.Button(
-                self, text="⬅ Terug naar home", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Home))
-            back_button.place(x=725, y=465, anchor="center")
+                self, text="⬅ Terug naar instellingen", highlightbackground="white smoke",
+                command=lambda: controller.show_frame(Settings))
+            back_button.place(x=700, y=465, anchor="center")
+
+            # Refresh button
+            refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke",
+                                       command=Temperature.update(self))
+            refresh_button.place(x=80, y=465, ancho="center")
+
         else:
             # Homepagina button
             back_button = tk.Button(
-                self, text="⬅ Terug naar home", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Home))
-            back_button.place(x=725, y=465, anchor="center")
+                self, text="⬅ Terug naar instellingen", highlightbackground="white smoke",
+                command=lambda: controller.show_frame(Settings))
+            back_button.place(x=700, y=465, anchor="center")
+
+            # Refresh button
+            refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke",
+                                       command=Temperature.update(self))
+            refresh_button.place(x=80, y=465, anchor="center")
 
 def TempMaker():
     global TempList
+    time.sleep(3)
     while 1:
-        TempList = TempLineData(ser.read(60))
         time.sleep(1)
+        TempList = TempLineData(ser.read(60))
         print(TempList)
-        #Temperature.TempSetter(TempList)
 
 def ThreadSetup():
     TempThread = threading.Thread(target=TempMaker, args=(), daemon=True)
     TempThread.start()
 
 if __name__ == "__main__":
-    ser = SetupConnection("Com3", 19200)
-    ser.open()
-    ser.read(4)
-
-    ThreadSetup()
+    try:
+        ser = SetupConnection("Com3", 19200)
+        ser.open()
+        ser.read(4)
+        TempList = TempLineData(ser.read(60))
+        ThreadSetup()
+    except:
+        TempList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
 
     APP = App()
     APP.title("Zonnescherm Applicatie")
     APP.resizable(0, 0)
     APP.geometry("800x500")
-    APP.setTemp()
     APP.update()
     APP.mainloop()
 

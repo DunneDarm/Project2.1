@@ -490,15 +490,18 @@ class Temperature(tk.Frame):
         self.plt = self.figure.add_subplot(1, 1, 1)
 
         #De waarden die in de grafiek moeten
-        self.x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        self.x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
         y = self.temp
 
-        #Basic plot for when there are no new values
-        self.line = self.plt.plot(self.x, y, color="blue", linestyle="-")[0]
-
-        #Limit de waarden tot 20 wanneer er meer zijnd.
+        #Limit de waarden tot 20 wanneer er meer zijn.
         self.x = self.x[0:20]  # Pak alleen 20 waarden
         y = y[0:20]
+
+        #Set the y-ax
+        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
+
+        # Basic plot for when there are no new values
+        self.line = self.plt.plot(self.x, y, color="blue", linestyle="-")[0]
 
         self.canvas = FigureCanvasTkAgg(self.figure, self)
 
@@ -534,23 +537,14 @@ class Temperature(tk.Frame):
 
     def TempRefresh(self):
         global TempList
-        self.temp = [1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        self.temp = TempList
         self.temp = self.temp[0:20]
 
-        #self.plt.clear()
-        #self.plt.plot(self.x, self.temp, color="blue", linestyle="-")
-        #self.canvas.draw()
-
         self.line.set_ydata(self.temp)
-        #self.figure.set_xlim([0, 20])
+        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
 
         self.canvas.draw()
-
-        print("Reached")
-        #self.plt.draw()
-
         Temperature.update(self)
-        #Temperature.update_idletasks(self)
 
 class Distance(tk.Frame):
     '''Bevat een grafiek van de uitgerolde afstand van het zonnescherm'''
@@ -559,50 +553,67 @@ class Distance(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         self.rollout = controller.temp_rollout
-        self.temp = Temp
+        self.Distance = TempList
 
-        figure = Figure(figsize=(8, 5), dpi=100)
-        plot = figure.add_subplot(1, 1, 1)
+        self.figure = Figure(figsize=(8, 5), dpi=100)
+        self.plt = self.figure.add_subplot(1, 1, 1)
 
-        x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-        y = self.temp
-        x = x[0:20]  # Pak alleen 20 waarden
+        #De waarden die in de grafiek moeten
+        self.x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        y = self.Distance
+
+        #Limit de waarden tot 20 wanneer er meer zijn.
+        self.x = self.x[0:20]  # Pak alleen 20 waarden
         y = y[0:20]
 
-        avg = round(sum(y) / len(y))
+        #Set the y-ax
+        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
 
-        avg_list = []
-        for i in range(20):
-            avg_list.append(avg)
+        #Basic plot for when there are no new values
+        self.line = self.plt.plot(self.x, y, color="blue", linestyle="-")[0]
 
-        # Teken de lijnen
-        plot.plot(x, y, color="blue",  linestyle="-")
+        self.canvas = FigureCanvasTkAgg(self.figure, self)
 
-        canvas = FigureCanvasTkAgg(figure, self)
-        canvas.get_tk_widget().grid(row=0, column=0)
+        self.canvas.get_tk_widget().grid(row=0, column=0)
 
         # Labels
-        title = tk.Label(self, text="Huidige afstand", font=(
+        title = tk.Label(self, text="Gemeten temperatuur", font=(
             None, 18, 'bold'))
         title.place(x=400, y=20, anchor="center")
 
-        blue_line = tk.Label(self, text="Huidige afstand", fg="blue")
-        blue_line.place(x=700, y=20, anchor="e")
+        blue_line = tk.Label(self, text="Gemeten temperatuur", fg="blue")
+        blue_line.place(x=725, y=15, anchor="e")
 
-        y_label = tk.Label(self, text="Afstand in cm")
-        y_label.place(x=15, y=30)
+        #Overbodig?
+        #red_line = tk.Label(self, text="Gemiddelde temperatuur", fg="red")
+        #red_line.place(x=725, y=40, anchor="e")
+
+        y_label = tk.Label(self, text="Temperatuur")
+        y_label.place(x=15, y=15)
 
         x_label = tk.Label(self, text="Meetmoment")
         x_label.place(x=725, y=485, anchor="e")
 
+        # Homepagina button
         back_button = tk.Button(
             self, text="⬅ Bekijk data", highlightbackground="white smoke",
             command=lambda: controller.show_frame(ViewData))
         back_button.place(x=15, y=465)
 
         # Refresh button
-        refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=Temperature.update(self))
+        refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=self.DistanceRefresh)
         refresh_button.place(x=200, y=10)
+
+    def DistanceRefresh(self):
+        global TempList
+        self.Distance = TempList
+        self.Distance = self.Distance[0:20]
+
+        self.line.set_ydata(self.Distance)
+        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
+
+        self.canvas.draw()
+        Temperature.update(self)
 
 class Lightintensity(tk.Frame):
     '''Bevat een grafiek van de gemeten lichtintesiteit data'''
@@ -610,64 +621,64 @@ class Lightintensity(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        self.rollout = controller.light_rollout
-        self.pullup = controller.light_pullup
+        self.rollout = controller.temp_rollout
+        self.light = TempList
 
-        canvas = tk.Canvas(self, width=800, height=500)
-        canvas.pack()
+        self.figure = Figure(figsize=(8, 5), dpi=100)
+        self.plt = self.figure.add_subplot(1, 1, 1)
 
-        for i in range(24):
-            x_axis = 50 + (i * 25)
-            canvas.create_line(x_axis, 450, x_axis, 50, width=1, dash=(2, 5))
-            canvas.create_text(x_axis, 450, text='%d' % (1 * i), anchor=tk.N)
+        #De waarden die in de grafiek moeten
+        self.x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        y = self.light
 
-        for i in range(17):
-            y_axis = 450 - (i * 25)
-            canvas.create_line(50, y_axis, 625, y_axis, width=1, dash=(2, 5))
-            canvas.create_text(40, y_axis, text='%d' % (2 * i), anchor=tk.E)
+        #Basic plot for when there are no new values
+        self.line = self.plt.plot(self.x, y, color="blue", linestyle="-")[0]
 
-        # Lijnen
-        def val_to_y(value):
-            '''Retourneert de juiste y-waarde die kan worden gebruikt in de grafiek'''
-            return 450-12.5*value
+        #Limit de waarden tot 20 wanneer er meer zijnd.
+        self.x = self.x[0:20]  # Pak alleen 20 waarden
+        y = y[0:20]
 
-        # Lijnen
-        canvas.create_line(50, 450, 625, 450, width=2)  # x-as
-        canvas.create_line(50, 450, 50, 50, width=2)  # y-as
-        canvas.create_line(650, 0, 650, 500, width=2,
-                           fill="grey")  # Scheidingslijn
-        canvas.create_line(650, 200, 800, 200, width=2,
-                           fill="grey")  # Scheidingslijn2
-        # Scherm uitrollen grens
-        canvas.create_line(50, (val_to_y(self.rollout)),
-                           625, (val_to_y(self.rollout)), fill="green")
-        # Scherm oprollen grens
-        canvas.create_line(50, (val_to_y(self.pullup)), 625,
-                           (val_to_y(self.pullup)), fill="red")
+        #Set the y-ax
+        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
 
-        # Grafiek labels
-        title_label = tk.Label(
-            self, text="Gemeten lichtintensiteit", font=(None, 18, 'bold'))
-        title_label.place(x=325, y=25, anchor="center")
+        self.canvas = FigureCanvasTkAgg(self.figure, self)
 
-        yaxis_label = tk.Label(self, text="Lichtintensiteit")
-        yaxis_label.place(x=50, y=25, anchor="center")
+        self.canvas.get_tk_widget().grid(row=0, column=0)
 
-        xaxis_label = tk.Label(self, text="Meetmoment")
-        xaxis_label.place(x=550, y=470)
+        # Labels
+        title = tk.Label(self, text="Gemeten Lichtintensiteit", font=(
+            None, 18, 'bold'))
+        title.place(x=400, y=20, anchor="center")
 
-        if platform.system() == "Darwin":
-            # Homepagina button
-            back_button = tk.Button(
-                self, text="⬅ Terug naar home", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Home))
-            back_button.place(x=725, y=465, anchor="center")
-        else:
-            # Homepagina button
-            back_button = tk.Button(
-                self, text="⬅ Terug naar home", highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Home))
-            back_button.place(x=725, y=465, anchor="center")
+        blue_line = tk.Label(self, text="Gemeten Lichtintensiteit", fg="blue")
+        blue_line.place(x=725, y=15, anchor="e")
+
+        y_label = tk.Label(self, text="Lichtintensiteit")
+        y_label.place(x=15, y=15)
+
+        x_label = tk.Label(self, text="Meetmoment")
+        x_label.place(x=725, y=485, anchor="e")
+
+        # Homepagina button
+        back_button = tk.Button(
+            self, text="⬅ Bekijk data", highlightbackground="white smoke",
+            command=lambda: controller.show_frame(ViewData))
+        back_button.place(x=15, y=465)
+
+        # Refresh button
+        refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=self.LightRefresh)
+        refresh_button.place(x=200, y=10)
+
+    def LightRefresh(self):
+        global TempList
+        self.light = TempList
+        self.light = self.light[0:20]
+
+        self.line.set_ydata(self.light)
+        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
+
+        self.canvas.draw()
+        Temperature.update(self)
 
 class ConnectedUnits(tk.Frame):
     '''Bevat een tabel met alle aangesloten besturings een heden.'''
@@ -722,9 +733,13 @@ def TempMaker():
     global TempList
     time.sleep(3)
     while 1:
-        time.sleep(1)
-        TempList = TempLineData(ser.read(60))
-        print(TempList)
+        try:
+            time.sleep(1)
+            TempList = TempLineData(ser.read(60))
+            print(TempList)
+        except:
+            print("OOF")
+            break
 
 def ThreadSetup():
     TempThread = threading.Thread(target=TempMaker, args=(), daemon=True)
@@ -738,7 +753,7 @@ if __name__ == "__main__":
         TempList = TempLineData(ser.read(60))
         ThreadSetup()
     except:
-        TempList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        TempList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     APP = App()
     APP.title("Zonnescherm Applicatie")

@@ -1,0 +1,190 @@
+/* 
+ * HC-SR04
+ * trigger to sensor : uno 0 (PD0) output
+ * echo from sensor  : uno 3 (PD3 = INT1) input
+ */
+
+#include <avr/io.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define F_CPU 16E6
+#include <avr/interrupt.h>
+#include <util/delay.h>
+#include <avr/sfr_defs.h>
+
+
+#define LED1 0 //Groene led
+#define LED2 1 //Rode led
+#define LED3 2 //Gele led
+#define UBBRVAL 51
+
+volatile uint32_t gv_counter; // 16 bit counter value
+volatile uint8_t gv_echo; // a flag
+float centi = 0; //global variable for distance
+volatile uint8_t gv_status; //a flag of the current status of the curtains
+volatile uint8_t rising;
+int ADCRead;
+uint16_t max_uitrol;
+uint16_t current_uitrol; //Kan later vervangen worden door centi voor huidige meerwaarde
+uint8_t min_uitrol;
+
+
+void init_ext_int(void);
+
+void uart_init()
+{
+	// Set the baud rate
+	UBRR0H = 0;
+	UBRR0L = UBBRVAL;
+	//disable U2X mode	
+	UCSR0A = 0;
+	//Enable transmitter and enable reciever 
+	UCSR0B = _BV(TXEN0) | _BV(RXEN0);
+	//Set frame format : asychronous, 8 data bist, 1 stop bit, no parity
+	UCSR0C = _BV(UCSZ01) | _BV(UCSZ00);
+}
+
+void uart_send(uint8_t data)
+{
+	//wait for an empty transmit buffer
+	//UDRE is set when the transmit buffer is empty
+	loop_until_bit_is_set(UCSR0A, UDRE0);
+	//send the data
+	UDR0 = data;
+}
+
+uint8_t uart_getchar(void)
+{
+	loop_until_bit_is_set(UCSR0A, RXC0);
+	return UDR0;
+}
+
+void USART_putstring(char* StringPtr)
+{
+	while (*StringPtr != 0x00)
+	{
+		uart_send(*StringPtr);
+		StringPtr++;
+	}
+}
+
+void AVRRealSetup()
+{
+	//this sets the channel the ADC will look at 
+	//ADMUX = 1
+	
+	//Sets the prescaler to 128. (Atmega328p Datasheet)
+	ADCSRA |= ((1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0));
+	
+	//sets the voltage reference to 5V
+	ADMUX |=  (1<<REFS0);
+	ADMUX &=~ (1<<REFS1);
+	
+	ADCSRB &=~ ((1<<ADTS2)|(1<<ADTS1)|(1<<ADTS0)); //ADC in free running mode
+	ADCSRA |= (1<<ADATE);//signal source, in this case is the free-running
+	
+	//ADC enable bit
+	ADCSRA |= (1<<ADEN);
+	
+	//ADC start conversion bit set to 1
+	ADCSRA |= (1<<ADSC);
+}
+
+void init_ext_int(void)
+{
+	// any change triggers ext interrupt 1
+	EICRA = (1 << ISC10);
+	EIMSK = (1 << INT1);
+}
+
+void init_timer(void)
+{
+	TCCR1A = 0;
+	TCCR1B = 0;
+}
+
+void Rol_uit_in()
+{
+	if (gv_status == 0)
+	{
+		while (current_uitrol < max_uitrol)
+		{
+			PORTB |= (1 << LED1);
+			PORTB |= (1 << LED3);
+			_delay_ms(100);
+			current_uitrol += 10;
+			PORTB &=~ (1 << LED3);
+			_delay_ms(100);
+		}
+		gv_status = 5;
+		PORTB &=~ (1 << LED1);
+	}
+	if (gv_status == 1)
+	{
+		while (current_uitrol > min_uitrol)
+		{
+			PORTB |= (1 << LED2);
+			PORTB |= (1 << LED3);
+			_delay_ms(100);
+			current_uitrol -= 10;
+			PORTB &=~ (1 << LED3);
+			_delay_ms(100);
+		}
+		gv_status = 5;
+		PORTB &=~ (1 << LED2);
+	}
+}
+
+void Send_signal()
+{
+	PORTD |= (1 << PIND4); //Turn on the pull-up, rising edge
+	_delay_us(12); //delay enough for the trigger to receive and comprehend
+	PORTD = 0;
+	gv_echo = 1;
+}
+
+ISR (INT1_vect)
+{
+	if (gv_echo == 1)
+	{	
+		TCCR1B |= (1<<CS10) | (0<<CS11) | (1<<CS12);
+		TCNT1 = 0;
+		//TIMSK0 |= (1<<TOIE0);
+		gv_counter = 0;
+		gv_echo = 0;
+	}
+	else{
+		TCCR1B = 0;
+		centi = TCNT1;
+	}
+}
+
+// ISR (TIMER0_OVF_vect)
+// {
+// 	gv_counter ++;
+// }
+
+int main(void)
+{
+	init_ext_int();
+	init_timer();
+	AVRRealSetup();
+	uart_init();
+	DDRB = 0xff; 
+	DDRD = 0x16;
+	PORTD = 0;
+	
+	char String [20];
+	sei(); //turn on interrupts
+	while(1)
+	{		
+		Send_signal();
+		_delay_ms(30);
+		ADCRead = ((uint32_t)(centi*1024/16)/58);
+		itoa(ADCRead, String, 10);
+		_delay_ms(500);
+		USART_putstring(String);
+		USART_putstring(" ");
+	}
+}

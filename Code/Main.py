@@ -1,4 +1,4 @@
-'''Python GUI voor het uitlezen en bekijken van data van zonnescherm'''
+"""Python GUI voor het uitlezen en bekijken van data van zonnescherm"""
 import tkinter as tk
 from tkinter import font as tfont
 from tkinter.messagebox import showinfo, showerror
@@ -10,8 +10,14 @@ import time
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import matplotlib
-matplotlib.use("TkAgg")
 from lightRead import *
+import random
+from matplotlib.animation import FuncAnimation
+from matplotlib import style
+import matplotlib.pyplot as plt
+matplotlib.use("TkAgg")
+plt.rcParams['toolbar'] = 'None'
+
 
 global TempPort
 global LightPort
@@ -19,9 +25,15 @@ global TempList
 global ConnectList
 global LightList
 
+# Grafiekfuncs
+style.use("ggplot")
+
+f = Figure(figsize=(5, 5), dpi=100, facecolor="Azure")
+a = f.add_subplot(111)
+
 
 class App(tk.Tk):
-    '''App initialisatie'''
+    """App initialisatie"""
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -49,7 +61,7 @@ class App(tk.Tk):
         self.cur_temp = "unknown"
 
         self.frames = {}
-        for frame_class in (Login, Home, ControlPanel, Settings, ViewData, Temperature,
+        for frame_class in (Login, Home, ControlPanel, Settings, ViewData,
                             Distance, Lightintensity, ConnectedUnits):
             frame = frame_class(container, self)
             self.frames[frame_class] = frame
@@ -59,12 +71,13 @@ class App(tk.Tk):
         self.show_frame(Login)
 
     def show_frame(self, page):
-        '''Verander van frame in de GUI'''
+        """Verander van frame in de GUI"""
         frame = self.frames[page]
         frame.tkraise()
 
+
 class Login(tk.Frame):
-    '''Bevat het (dummy) login scherm'''
+    """Bevat het (dummy) login scherm"""
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -105,7 +118,7 @@ class Login(tk.Frame):
 
         # Login / registreer button
         def login():
-            '''Bepaal of de opgegeven inlog correct is of niet (zonder DB)'''
+            """Bepaal of de opgegeven inlog correct is of niet (zonder DB)"""
             if entry_username.get().lower() == "groep3" and entry_password.get() == "1234":
                 controller.show_frame(Home)
             else:
@@ -141,7 +154,7 @@ class Login(tk.Frame):
 
 
 class Home(tk.Frame):
-    '''Bevat knoppen om te gaan naar: data, instellingen en controlepaneel'''
+    """Bevat knoppen om te gaan naar: data, instellingen en controlepaneel"""
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -211,7 +224,7 @@ class Home(tk.Frame):
 
 
 class ControlPanel(tk.Frame):
-    '''Geeft de mogelijkheid om het scherm op te rollen of uit te rollen'''
+    """Geeft de mogelijkheid om het scherm op te rollen of uit te rollen"""
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -278,7 +291,7 @@ class ControlPanel(tk.Frame):
 
 
 class Settings(tk.Frame):
-    '''Pas de instellingen aan van het zonnescherm'''
+    """Pas de instellingen aan van het zonnescherm"""
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -394,7 +407,7 @@ class Settings(tk.Frame):
 
 
 class ViewData(tk.Frame):
-    '''Bevat knoppen die leiden naar verschillende data (grafieken)'''
+    """Bevat knoppen die leiden naar verschillende data (grafieken)"""
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -417,7 +430,7 @@ class ViewData(tk.Frame):
             temp_button = tk.Button(
                 self, text="Temperatuur", font=(None, 18, 'bold'),
                 highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Temperature))
+                command=TemperatureGraph)
             temp_button.config(height=3, width=25)
             temp_button.place(x=400, y=150, anchor="center")
 
@@ -451,7 +464,7 @@ class ViewData(tk.Frame):
             temp_button = tk.Button(
                 self, text="Temperatuur", font=(None, 18, 'bold'),
                 highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Temperature))
+                command=lambda: controller.show_frame(TemperatureGraph))
             temp_button.config(height=2, width=20)
             temp_button.place(x=400, y=125, anchor="center")
 
@@ -481,77 +494,49 @@ class ViewData(tk.Frame):
                 self, text="Uitloggen", highlightbackground="white smoke", command=quit)
             logout_button.place(x=718, y=465)
 
-class Temperature(tk.Frame):
-    '''Bevat een grafiek van de gemeten temperatuur data'''
 
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-        self.rollout = controller.temp_rollout
-        self.temp = TempList
+class TemperatureGraph:
+    """Schetst een grafiek van de gemeten temperatuur"""
 
-        self.figure = Figure(figsize=(8, 5), dpi=100)
-        self.plt = self.figure.add_subplot(1, 1, 1)
+    def __init__(self):
+        self.x_axis = [0]
+        self.y_axis = [0]
 
-        #De waarden die in de grafiek moeten
-        self.x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-        y = self.temp
+        self.animation = FuncAnimation(plt.gcf(), self.animate, interval=1000)
+        plt.show()
 
-        #Limit de waarden tot 20 wanneer er meer zijn.
-        self.x = self.x[0:20]  # Pak alleen 20 waarden
-        y = y[0:20]
+    def add_y(self, y):
+        """Voeg nieuwe y toe"""
+        self.x_axis.append(self.x_axis[-1] + 1)
+        self.y_axis.append(y)
 
-        #Set the y-ax
-        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
+    def animate(self, _i):
+        """Schets de grafiek"""
+        self.add_y(random.randint(15, 25))  # Random data simuleren
+        x = self.x_axis[-10:]
+        y = self.y_axis[-10:]
+        plt.cla()  # Clear current axes
+        plt.plot(x, y, 'o-')
+        plt.title('Gemeten temperatuur')
+        plt.gcf().canvas.set_window_title('Temperatuur grafiek')
+        plt.ylabel('Temperatuur in °C')
+        plt.xlabel('Meetmoment')
 
-        # Basic plot for when there are no new values
-        self.line = self.plt.plot(self.x, y, color="blue", linestyle="-")[0]
 
-        self.canvas = FigureCanvasTkAgg(self.figure, self)
+#     def TempRefresh(self):
+#         global TempList
+#         self.temp = TempList
+#         self.temp = self.temp[0:20]
+#
+#         self.line.set_ydata(self.temp)
+#         self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
+#
+#         self.canvas.draw()
+#         Temperature.update(self)
 
-        self.canvas.get_tk_widget().grid(row=0, column=0)
-
-        # Labels
-        title = tk.Label(self, text="Gemeten temperatuur", font=(
-            None, 18, 'bold'))
-        title.place(x=400, y=20, anchor="center")
-
-        blue_line = tk.Label(self, text="Gemeten temperatuur", fg="blue")
-        blue_line.place(x=725, y=15, anchor="e")
-
-        #Overbodig?
-        #red_line = tk.Label(self, text="Gemiddelde temperatuur", fg="red")
-        #red_line.place(x=725, y=40, anchor="e")
-
-        y_label = tk.Label(self, text="Temperatuur")
-        y_label.place(x=15, y=15)
-
-        x_label = tk.Label(self, text="Meetmoment")
-        x_label.place(x=725, y=485, anchor="e")
-
-        # Homepagina button
-        back_button = tk.Button(
-            self, text="⬅ Bekijk data", highlightbackground="white smoke",
-            command=lambda: controller.show_frame(ViewData))
-        back_button.place(x=15, y=465)
-
-        # Refresh button
-        refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=self.TempRefresh)
-        refresh_button.place(x=200, y=10)
-
-    def TempRefresh(self):
-        global TempList
-        self.temp = TempList
-        self.temp = self.temp[0:20]
-
-        self.line.set_ydata(self.temp)
-        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
-
-        self.canvas.draw()
-        Temperature.update(self)
 
 class Distance(tk.Frame):
-    '''Bevat een grafiek van de uitgerolde afstand van het zonnescherm'''
+    """Bevat een grafiek van de uitgerolde afstand van het zonnescherm"""
 
     def __init__(self, parent, controller, Temp = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]):
         tk.Frame.__init__(self, parent)
@@ -605,22 +590,23 @@ class Distance(tk.Frame):
         back_button.place(x=15, y=465)
 
         # Refresh button
-        refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=self.DistanceRefresh)
-        refresh_button.place(x=200, y=10)
+        # refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=self.DistanceRefresh)
+        # refresh_button.place(x=200, y=10)
 
-    def DistanceRefresh(self):
-        global TempList
-        self.Distance = TempList
-        self.Distance = self.Distance[0:20]
+    # def DistanceRefresh(self):
+    #     global TempList
+    #     self.Distance = TempList
+    #     self.Distance = self.Distance[0:20]
+    #
+    #     self.line.set_ydata(self.Distance)
+    #     self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
+    #
+    #     self.canvas.draw()
+    #     Temperature.update(self)
 
-        self.line.set_ydata(self.Distance)
-        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
-
-        self.canvas.draw()
-        Temperature.update(self)
 
 class Lightintensity(tk.Frame):
-    '''Bevat een grafiek van de gemeten lichtintesiteit data'''
+    """Bevat een grafiek van de gemeten lichtintesiteit data"""
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -670,22 +656,23 @@ class Lightintensity(tk.Frame):
         back_button.place(x=15, y=465)
 
         # Refresh button
-        refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=self.LightRefresh)
-        refresh_button.place(x=200, y=10)
+        # refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=self.LightRefresh)
+        # refresh_button.place(x=200, y=10)
 
-    def LightRefresh(self):
-        global LightList
-        self.light = LightList
-        self.light = self.light[0:20]
+    # def LightRefresh(self):
+    #     global LightList
+    #     self.light = LightList
+    #     self.light = self.light[0:20]
+    #
+    #     self.line.set_ydata(self.light)
+    #     self.plt.set_ylim([min(LightList) - 1, max(LightList) + 1])
+    #
+    #     self.canvas.draw()
+    #     Temperature.update(self)
 
-        self.line.set_ydata(self.light)
-        self.plt.set_ylim([min(LightList) - 1, max(LightList) + 1])
-
-        self.canvas.draw()
-        Temperature.update(self)
 
 class ConnectedUnits(tk.Frame):
-    '''Bevat een tabel met alle aangesloten besturings een heden.'''
+    """Bevat een tabel met alle aangesloten besturings een heden"""
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -717,9 +704,9 @@ class ConnectedUnits(tk.Frame):
             back_button.place(x=700, y=465, anchor="center")
 
             # Refresh button
-            refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke",
-                                       command=Temperature.update(self))
-            refresh_button.place(x=80, y=465, ancho="center")
+            # refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke",
+            #                            command=Temperature.update(self))
+            # refresh_button.place(x=80, y=465, anchor="center")
 
         else:
             # Homepagina button
@@ -729,9 +716,9 @@ class ConnectedUnits(tk.Frame):
             back_button.place(x=700, y=465, anchor="center")
 
             # Refresh button
-            refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke",
-                                       command=Temperature.update(self))
-            refresh_button.place(x=80, y=465, anchor="center")
+            # refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke",
+            #                            command=Temperature.update(self))
+            # refresh_button.place(x=80, y=465, anchor="center")
 
 def TempMaker():
     global TempList
@@ -745,6 +732,7 @@ def TempMaker():
             print("Temperature OOF")
             break
 
+
 def LightMaker():
     global LightList
     time.sleep(1)
@@ -757,12 +745,14 @@ def LightMaker():
             print("Light OOF")
             break
 
+
 def ThreadSetup():
     TempThread = threading.Thread(target=TempMaker, args=(), daemon=True)
     TempThread.start()
 
     LightThread = threading.Thread(target=LightMaker, args=(), daemon=True)
     LightThread.start()
+
 
 def ConnectionSetup():
     global TempPort
@@ -786,6 +776,7 @@ def ConnectionSetup():
         if "L" in str(Value)[2:-1]:
             LightPort = arduino
         print(arduino.read(10))
+
 
 if __name__ == "__main__":
     TempList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

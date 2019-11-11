@@ -44,14 +44,17 @@ class Temperature(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Gemeten temperatuur",
-                         bg="azure", font=(None, 18, 'bold'))
-        label.pack(pady=10, padx=10)
+        title_label = tk.Label(self, text="Gemeten temperatuur",
+                               font=controller.tfont, bg="white smoke")
+        title_label.pack(side="top", fill="x")
+
+        divider = tk.Frame(self, height=1, bg="black")
+        divider.pack(side="top", fill="x")
 
         button = tk.Button(self, text="Terug naar bekijk data",
                            command=lambda: controller.show_frame(ViewData))
-        button.pack(pady=5)
-
+        button.pack(pady=20)
+        
         canvas = FigureCanvasTkAgg(f, self)
         canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
         canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)

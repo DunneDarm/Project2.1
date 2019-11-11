@@ -54,7 +54,7 @@ class Temperature(tk.Frame):
         button = tk.Button(self, text="Terug naar bekijk data",
                            command=lambda: controller.show_frame(ViewData))
         button.pack(pady=20)
-        
+
         canvas = FigureCanvasTkAgg(f, self)
         canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
         canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)

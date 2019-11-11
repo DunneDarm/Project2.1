@@ -2,7 +2,7 @@ def currentLight(serialread):
     byteList= []
     value= ""
     while(1) :
-        bytes= serialread().decode('utf-8')
+        bytes= serialread.decode('utf-8')
         if bytes != 'L':
             byteList.append(bytes)
         elif bytes == 'L':
@@ -13,20 +13,11 @@ def currentLight(serialread):
 
     return value
 
-def LightLineData(serialread) :
-    lightvalues = []
-    listholder = []
-    strholder = ""
-
-    while (1):
-        bytes = serialread().decode('utf-8')
-
-        if bytes != 'L':
-            listholder.append(bytes)
-        elif bytes == 'L':
-            for i in listholder:
-                strholder += i
-            lightvalues.append(strholder)
-            listholder = []
-            strholder = ""
-    return lightvalues
+def LightLineData(serialread):
+    LumenList = []
+    bytes = serialread.decode('utf-8')
+    bytes = bytes.split("L")
+    bytes = bytes[1:21]
+    for light in bytes:
+        LumenList.append(int(light))
+    return LumenList

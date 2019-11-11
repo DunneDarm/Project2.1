@@ -9,12 +9,16 @@ import threading
 import time
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plotting
 import matplotlib
 matplotlib.use("TkAgg")
+from lightRead import *
 
-global ser
+global TempPort
+global LightPort
 global TempList
+global ConnectList
+global LightList
+
 
 class App(tk.Tk):
     '''App initialisatie'''
@@ -622,7 +626,7 @@ class Lightintensity(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         self.rollout = controller.temp_rollout
-        self.light = TempList
+        self.light = LightList
 
         self.figure = Figure(figsize=(8, 5), dpi=100)
         self.plt = self.figure.add_subplot(1, 1, 1)
@@ -639,7 +643,7 @@ class Lightintensity(tk.Frame):
         y = y[0:20]
 
         #Set the y-ax
-        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
+        self.plt.set_ylim([min(LightList) - 1, max(LightList) + 1])
 
         self.canvas = FigureCanvasTkAgg(self.figure, self)
 
@@ -670,12 +674,12 @@ class Lightintensity(tk.Frame):
         refresh_button.place(x=200, y=10)
 
     def LightRefresh(self):
-        global TempList
-        self.light = TempList
+        global LightList
+        self.light = LightList
         self.light = self.light[0:20]
 
         self.line.set_ydata(self.light)
-        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
+        self.plt.set_ylim([min(LightList) - 1, max(LightList) + 1])
 
         self.canvas.draw()
         Temperature.update(self)
@@ -734,23 +738,61 @@ def TempMaker():
     time.sleep(3)
     while 1:
         try:
-            time.sleep(1)
-            TempList = TempLineData(ser.read(60))
+            time.sleep(2)
+            TempList = TempLineData(TempPort.read(60))
             print(TempList)
         except:
-            print("OOF")
+            print("Temperature OOF")
+            break
+
+def LightMaker():
+    global LightList
+    time.sleep(1)
+    while 1:
+        try:
+            time.sleep(2)
+            LightList = LightLineData(LightPort.read(120))
+            print(LightList)
+        except:
+            print("Light OOF")
             break
 
 def ThreadSetup():
     TempThread = threading.Thread(target=TempMaker, args=(), daemon=True)
     TempThread.start()
 
+    LightThread = threading.Thread(target=LightMaker, args=(), daemon=True)
+    LightThread.start()
+
+def ConnectionSetup():
+    global TempPort
+    global TempList
+    global LightPort
+    global ConnectList
+    ports = getPorts()
+    ConnectList = []
+    for port in ports:
+        ser = serial.Serial()
+        test = str(port).split(" ")
+        ser.baudrate = 19200
+        ser.port = test[0]
+        ConnectList.append(ser)
+
+    for arduino in ConnectList:
+        arduino.open()
+        Value = arduino.read(6)
+        if "t" in str(Value)[2:-1]:
+            TempPort = arduino
+        if "L" in str(Value)[2:-1]:
+            LightPort = arduino
+        print(arduino.read(10))
+
 if __name__ == "__main__":
+    TempList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    LightList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     try:
-        ser = SetupConnection("Com3", 19200)
-        ser.open()
-        ser.read(4)
-        TempList = TempLineData(ser.read(60))
+        ConnectionSetup()
+        TempList = TempLineData(TempPort.read(60))
         ThreadSetup()
     except:
         TempList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -762,4 +804,5 @@ if __name__ == "__main__":
     APP.update()
     APP.mainloop()
 
-    ser.close()
+    for arduino in ConnectList:
+        arduino.close()

@@ -62,7 +62,7 @@ class App(tk.Tk):
 
         self.frames = {}
         for frame_class in (Login, Home, ControlPanel, Settings, ViewData,
-                            Distance, Lightintensity, ConnectedUnits):
+                            Distance, ConnectedUnits):
             frame = frame_class(container, self)
             self.frames[frame_class] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -438,7 +438,7 @@ class ViewData(tk.Frame):
             lightintensity_button = tk.Button(
                 self, text="Lichtintensiteit", font=(None, 18, 'bold'),
                 highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Lightintensity))
+                command=LightGraph)
             lightintensity_button.config(height=3, width=25)
             lightintensity_button.place(x=400, y=250, anchor="center")
 
@@ -464,7 +464,7 @@ class ViewData(tk.Frame):
             temp_button = tk.Button(
                 self, text="Temperatuur", font=(None, 18, 'bold'),
                 highlightbackground="white smoke",
-                command=lambda: controller.show_frame(TemperatureGraph))
+                command=TemperatureGraph)
             temp_button.config(height=2, width=20)
             temp_button.place(x=400, y=125, anchor="center")
 
@@ -472,7 +472,7 @@ class ViewData(tk.Frame):
             lightintensity_button = tk.Button(
                 self, text="Lichtintensiteit", font=(None, 18, 'bold'),
                 highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Lightintensity))
+                command=LightGraph)
             lightintensity_button.config(height=2, width=20)
             lightintensity_button.place(x=400, y=250, anchor="center")
 
@@ -605,55 +605,32 @@ class Distance(tk.Frame):
     #     Temperature.update(self)
 
 
-class Lightintensity(tk.Frame):
-    """Bevat een grafiek van de gemeten lichtintesiteit data"""
+class LightGraph:
+    """Schetst een grafiek van de gemeten lichtintensiteit"""
 
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-        self.rollout = controller.temp_rollout
-        self.light = LightList
+    def __init__(self):
+        self.x_axis = [0]
+        self.y_axis = [0]
 
-        self.figure = Figure(figsize=(8, 5), dpi=100)
-        self.plt = self.figure.add_subplot(1, 1, 1)
+        self.animation = FuncAnimation(plt.gcf(), self.animate, interval=1000)
+        plt.show()
 
-        #De waarden die in de grafiek moeten
-        self.x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-        y = self.light
+    def add_y(self, y):
+        """Voeg nieuwe y toe"""
+        self.x_axis.append(self.x_axis[-1] + 1)
+        self.y_axis.append(y)
 
-        #Basic plot for when there are no new values
-        self.line = self.plt.plot(self.x, y, color="blue", linestyle="-")[0]
-
-        #Limit de waarden tot 20 wanneer er meer zijnd.
-        self.x = self.x[0:20]  # Pak alleen 20 waarden
-        y = y[0:20]
-
-        #Set the y-ax
-        self.plt.set_ylim([min(LightList) - 1, max(LightList) + 1])
-
-        self.canvas = FigureCanvasTkAgg(self.figure, self)
-
-        self.canvas.get_tk_widget().grid(row=0, column=0)
-
-        # Labels
-        title = tk.Label(self, text="Gemeten Lichtintensiteit", font=(
-            None, 18, 'bold'))
-        title.place(x=400, y=20, anchor="center")
-
-        blue_line = tk.Label(self, text="Gemeten Lichtintensiteit", fg="blue")
-        blue_line.place(x=725, y=15, anchor="e")
-
-        y_label = tk.Label(self, text="Lichtintensiteit")
-        y_label.place(x=15, y=15)
-
-        x_label = tk.Label(self, text="Meetmoment")
-        x_label.place(x=725, y=485, anchor="e")
-
-        # Homepagina button
-        back_button = tk.Button(
-            self, text="⬅ Bekijk data", highlightbackground="white smoke",
-            command=lambda: controller.show_frame(ViewData))
-        back_button.place(x=15, y=465)
+    def animate(self, _i):
+        """Schets de grafiek"""
+        self.add_y(random.randint(15, 25))  # Random data simuleren
+        x = self.x_axis[-10:]
+        y = self.y_axis[-10:]
+        plt.cla()  # Clear current axes
+        plt.plot(x, y, 'o-')
+        plt.title('Gemeten lichtintensiteit')
+        plt.gcf().canvas.set_window_title('Lichtintensiteit grafiek')
+        plt.ylabel('Lichtintensiteit in Lumen')
+        plt.xlabel('Meetmoment')
 
         # Refresh button
         # refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=self.LightRefresh)

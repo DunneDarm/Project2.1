@@ -646,9 +646,8 @@ def TempMaker():
             TempList = TempLineData(TempPort.read(80))
             print(TempList)
         except:
-            print("Temperature OOF")
-            break
-
+            ConnectionSetup()
+            print("Temperature detection unit not available")
 
 def LightMaker():
     global LightList
@@ -659,8 +658,8 @@ def LightMaker():
             LightList = LightLineData(LightPort.read(120))
             print(LightList)
         except:
-            print("Light OOF")
-            break
+            #ConnectionSetup()
+            print("Lightdetection unit not available")
 
 
 def ThreadSetup():
@@ -687,24 +686,22 @@ def ConnectionSetup():
 
     for arduino in ConnectList:
         arduino.open()
-        Value = arduino.read(20)
+        Value = arduino.read(15)
         if "t" in str(Value)[2:-1]:
             TempPort = arduino
         if "L" in str(Value)[2:-1]:
             LightPort = arduino
-        print(arduino.read(10))
-
 
 if __name__ == "__main__":
     TempList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     LightList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     try:
         ConnectionSetup()
-        #TempList = TempLineData(TempPort.read(60))
+        TempList = TempLineData(TempPort.read(60))
         ThreadSetup()
     except:
         TempList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        print("OOF x2")
+        print("Zero supported devices found")
 
     APP = App()
     APP.title("Zonnescherm Applicatie")

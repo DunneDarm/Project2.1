@@ -1,20 +1,15 @@
-Maximaal 1.60M en oprollen moet stoppen als het uiteinde de ultrasoonoorsensor bij 10 is.
+
 
 Temperatuursensor:
 Temperatuursensor moet het zonnescherm kunnen aansturen bij temperatuurgrens.
 elke 40 seconden wordt de temperatuur gemeten.
-Als er een centrale is moeten de resultaten elke 40 seconden doorgestuurd worden.
 
 Lichtsensor:
 Lichtsensor moet het zonnescherm kunnen aansturen bij Lichtgrens.
 Wordt elke 30 seconden gemeten.
-Status rolluik wordt elke 60 seconden aan de centrale door gegeven.
 
 Centrale:
-
 Instellingen kan veranderen.
-
-Sensor data van ultrasoon hoeft niet weergeven te worden. I.p.v. deze data moet de status van het zonneschrm of rolluik weer gegeven. (Opgerold/uitgerold)
 
 BIJNA
 Dit moet met knoppen gedaan worden.
@@ -60,3 +55,10 @@ Kan de besturingseenhenden identificeren en daardoor de bijbehorende sensoren ui
 
 Arduino's moeten kunnen worden uitgeplugd worden zonder dat het hele programma kapot gaat.?
 -Werkt maar de arduino's kunnen niet opnieuw ingeplugd worden.
+
+Status rolluik wordt elke 60 seconden aan de centrale door gegeven.
+Als er een centrale is moeten de resultaten elke 40 seconden doorgestuurd worden.
+
+Maximaal 1.60M en oprollen moet stoppen als het uiteinde de ultrasoonoorsensor bij 10 is.
+
+Sensor data van ultrasoon hoeft niet weergeven te worden. I.p.v. deze data moet de status van het zonneschrm of rolluik weer gegeven. (Opgerold/uitgerold)

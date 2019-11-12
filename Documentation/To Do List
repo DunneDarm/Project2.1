@@ -1,7 +1,4 @@
-Uitrol lengte van het scherm moet instelbaar zijn.
 Maximaal 1.60M en oprollen moet stoppen als het uiteinde de ultrasoonoorsensor bij 10 is.
-
-Arduino's moeten kunnen worden uitgeplugd worden zonder dat het hele programma kapot gaat.?
 
 Temperatuursensor:
 Temperatuursensor moet het zonnescherm kunnen aansturen bij temperatuurgrens.
@@ -14,19 +11,26 @@ Wordt elke 30 seconden gemeten.
 Status rolluik wordt elke 60 seconden aan de centrale door gegeven.
 
 Centrale:
-Moet de Rolluiken kunnen bedienen.
+
 Instellingen kan veranderen.
-Met grafieken de data bekijken.
+
 Sensor data van ultrasoon hoeft niet weergeven te worden. I.p.v. deze data moet de status van het zonneschrm of rolluik weer gegeven. (Opgerold/uitgerold)
 
-Centrale kan via usb comuniceren met besturigseenheden.
-Kan de besturingseenhenden identificeren en daardoor de bijbehorende sensoren uitlezen en in een grafiek tonen.
-Maximale uitrol stand instellen.
-
-Rolluik moeten los van elkaar kunnen worden aangepast op de besturigseenheden(afhankelijk van de sensor).
+BIJNA
 Dit moet met knoppen gedaan worden.
+Met grafieken de data bekijken.
 
+NIET LUKKEN
+Centrale kan via usb comuniceren met besturigseenheden.
+Moet de Rolluiken kunnen bedienen.
+Maximale uitrol stand instellen.
+Rolluik moeten los van elkaar kunnen worden aangepast op de besturigseenheden(afhankelijk van de sensor).
+
+
+???
 Er moeten 5 besturingseenheden aangesloten kunnen worden.
+
+##################################################################################################################################################################
 
 Inleveren:
 Functioneel ontwerp
@@ -41,9 +45,9 @@ Presentatie/demonstratie van de eindproducten.
 
 Er moet ook iets gedaan worden voor samenwerken!
 
+#####################################################################################################################################################################
 
-
-Klaar?
+KLAAR
 Besturingseenheden:
 Scherm uitgerold = rood ledje
 Scherm opgerold = Groen ledje
@@ -52,3 +56,7 @@ Oprollen is geel knipperen en groen ledje
 Uitrollen is geel knipperen en rood ledje
 
 Alleen de aangesloten arduino's moeten getoond worden.
+Kan de besturingseenhenden identificeren en daardoor de bijbehorende sensoren uitlezen en in een grafiek tonen.
+
+Arduino's moeten kunnen worden uitgeplugd worden zonder dat het hele programma kapot gaat.?
+-Werkt maar de arduino's kunnen niet opnieuw ingeplugd worden.

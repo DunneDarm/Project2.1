@@ -512,7 +512,7 @@ class TemperatureGraph:
 
     def animate(self, _i):
         """Schets de grafiek"""
-        self.add_y(random.randint(15, 25))  # Random data simuleren
+        self.add_y(int(TempList[-1]))
         x = self.x_axis[-10:]
         y = self.y_axis[-10:]
         plt.cla()  # Clear current axes
@@ -521,19 +521,6 @@ class TemperatureGraph:
         plt.gcf().canvas.set_window_title('Temperatuur grafiek')
         plt.ylabel('Temperatuur in °C')
         plt.xlabel('Meetmoment')
-
-
-#     def TempRefresh(self):
-#         global TempList
-#         self.temp = TempList
-#         self.temp = self.temp[0:20]
-#
-#         self.line.set_ydata(self.temp)
-#         self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
-#
-#         self.canvas.draw()
-#         Temperature.update(self)
-
 
 class Distance(tk.Frame):
     """Bevat een grafiek van de uitgerolde afstand van het zonnescherm"""
@@ -573,10 +560,6 @@ class Distance(tk.Frame):
         blue_line = tk.Label(self, text="Gemeten temperatuur", fg="blue")
         blue_line.place(x=725, y=15, anchor="e")
 
-        #Overbodig?
-        #red_line = tk.Label(self, text="Gemiddelde temperatuur", fg="red")
-        #red_line.place(x=725, y=40, anchor="e")
-
         y_label = tk.Label(self, text="Temperatuur")
         y_label.place(x=15, y=15)
 
@@ -588,22 +571,6 @@ class Distance(tk.Frame):
             self, text="⬅ Bekijk data", highlightbackground="white smoke",
             command=lambda: controller.show_frame(ViewData))
         back_button.place(x=15, y=465)
-
-        # Refresh button
-        # refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=self.DistanceRefresh)
-        # refresh_button.place(x=200, y=10)
-
-    # def DistanceRefresh(self):
-    #     global TempList
-    #     self.Distance = TempList
-    #     self.Distance = self.Distance[0:20]
-    #
-    #     self.line.set_ydata(self.Distance)
-    #     self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
-    #
-    #     self.canvas.draw()
-    #     Temperature.update(self)
-
 
 class LightGraph:
     """Schetst een grafiek van de gemeten lichtintensiteit"""
@@ -622,7 +589,7 @@ class LightGraph:
 
     def animate(self, _i):
         """Schets de grafiek"""
-        self.add_y(random.randint(15, 25))  # Random data simuleren
+        self.add_y(LightList[:-1])
         x = self.x_axis[-10:]
         y = self.y_axis[-10:]
         plt.cla()  # Clear current axes
@@ -631,22 +598,6 @@ class LightGraph:
         plt.gcf().canvas.set_window_title('Lichtintensiteit grafiek')
         plt.ylabel('Lichtintensiteit in Lumen')
         plt.xlabel('Meetmoment')
-
-        # Refresh button
-        # refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke", command=self.LightRefresh)
-        # refresh_button.place(x=200, y=10)
-
-    # def LightRefresh(self):
-    #     global LightList
-    #     self.light = LightList
-    #     self.light = self.light[0:20]
-    #
-    #     self.line.set_ydata(self.light)
-    #     self.plt.set_ylim([min(LightList) - 1, max(LightList) + 1])
-    #
-    #     self.canvas.draw()
-    #     Temperature.update(self)
-
 
 class ConnectedUnits(tk.Frame):
     """Bevat een tabel met alle aangesloten besturings een heden"""
@@ -680,11 +631,6 @@ class ConnectedUnits(tk.Frame):
                 command=lambda: controller.show_frame(Settings))
             back_button.place(x=700, y=465, anchor="center")
 
-            # Refresh button
-            # refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke",
-            #                            command=Temperature.update(self))
-            # refresh_button.place(x=80, y=465, anchor="center")
-
         else:
             # Homepagina button
             back_button = tk.Button(
@@ -692,36 +638,29 @@ class ConnectedUnits(tk.Frame):
                 command=lambda: controller.show_frame(Settings))
             back_button.place(x=700, y=465, anchor="center")
 
-            # Refresh button
-            # refresh_button = tk.Button(self, text="Refresh", highlightbackground="white smoke",
-            #                            command=Temperature.update(self))
-            # refresh_button.place(x=80, y=465, anchor="center")
-
 def TempMaker():
     global TempList
     time.sleep(3)
     while 1:
         try:
             time.sleep(2)
-            TempList = TempLineData(TempPort.read(60))
+            TempList = TempLineData(TempPort.read(80))
             print(TempList)
         except:
             print("Temperature OOF")
             break
 
-
 def LightMaker():
     global LightList
-    time.sleep(1)
+    time.sleep(2)
     while 1:
         try:
             time.sleep(2)
-            LightList = LightLineData(LightPort.read(120))
+            LightList = LightLineData(LightPort.read(80))
             print(LightList)
         except:
             print("Light OOF")
             break
-
 
 def ThreadSetup():
     TempThread = threading.Thread(target=TempMaker, args=(), daemon=True)
@@ -729,7 +668,6 @@ def ThreadSetup():
 
     LightThread = threading.Thread(target=LightMaker, args=(), daemon=True)
     LightThread.start()
-
 
 def ConnectionSetup():
     global TempPort
@@ -747,7 +685,7 @@ def ConnectionSetup():
 
     for arduino in ConnectList:
         arduino.open()
-        Value = arduino.read(6)
+        Value = arduino.read(20)
         if "t" in str(Value)[2:-1]:
             TempPort = arduino
         if "L" in str(Value)[2:-1]:
@@ -760,10 +698,11 @@ if __name__ == "__main__":
     LightList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     try:
         ConnectionSetup()
-        TempList = TempLineData(TempPort.read(60))
+        #TempList = TempLineData(TempPort.read(60))
         ThreadSetup()
     except:
         TempList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        print("OOF x2")
 
     APP = App()
     APP.title("Zonnescherm Applicatie")

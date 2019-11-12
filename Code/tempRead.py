@@ -1,6 +1,3 @@
-def currenttemp(serialread):
-    return str(serialread)[2:-1]
-
 def TempLineData(serialread):
     Realtemplist = []
     tempString = str(serialread)[2:-1]

@@ -448,6 +448,12 @@ class ViewData(tk.Frame):
                 self, text="Uitloggen", highlightbackground="white smoke", command=quit)
             logout_button.place(x=718, y=465)
 
+    def LowerSCreen(self):
+        TempPort.write()
+
+    def RaiseScreen(self):
+        TempPort.write(1)
+
 
 class TemperatureGraph:
     """Schetst een grafiek van de gemeten temperatuur"""
@@ -554,7 +560,6 @@ def TempMaker():
             TempList = TempLineData(TempPort.read(80))
             print(TempList)
         except:
-            ConnectionSetup()
             print("Temperature detection unit not available")
 
 
@@ -567,7 +572,6 @@ def LightMaker():
             LightList = LightLineData(LightPort.read(120))
             print(LightList)
         except:
-            #ConnectionSetup()
             print("Lightdetection unit not available")
 
 
@@ -607,7 +611,7 @@ if __name__ == "__main__":
     LightList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     try:
         ConnectionSetup()
-        TempList = TempLineData(TempPort.read(60))
+        #TempList = TempLineData(TempPort.read(60))
         ThreadSetup()
     except:
         TempList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

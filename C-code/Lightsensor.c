@@ -2,7 +2,7 @@
  * Lichtsensor_project.c
  *
  * Created: 31-10-2019 11:37:21
- *  Author: aline
+ *  Author: Aline van der Klok $ Sybren Kuiper
  */
 #include <avr/io.h>
 #include <stdio.h>

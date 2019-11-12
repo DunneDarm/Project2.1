@@ -21,6 +21,7 @@ def LightLineData(serialread):
     for light in bytes:
         LumenList.append(int(light))
     return LumenList
+    print
 
 def LightData(serialread):
     bytes = serialread.decode('utf-8')

@@ -589,7 +589,7 @@ class LightGraph:
 
     def animate(self, _i):
         """Schets de grafiek"""
-        self.add_y(LightList[:-1])
+        self.add_y(LightList[-1])
         x = self.x_axis[-10:]
         y = self.y_axis[-10:]
         plt.cla()  # Clear current axes
@@ -656,7 +656,7 @@ def LightMaker():
     while 1:
         try:
             time.sleep(2)
-            LightList = LightLineData(LightPort.read(80))
+            LightList = LightLineData(LightPort.read(120))
             print(LightList)
         except:
             print("Light OOF")

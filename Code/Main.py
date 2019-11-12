@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import font as tfont
 from tkinter.messagebox import showinfo, showerror
 import platform
-from serialportconnection import *
+from Serialportconnection import *
 from tempRead import *
 import threading
 import time

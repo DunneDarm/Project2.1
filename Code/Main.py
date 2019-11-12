@@ -500,7 +500,7 @@ class TemperatureGraph:
 
     def __init__(self):
         self.x_axis = [0]
-        self.y_axis = [0]
+        self.y_axis = [TempList[0]]
 
         self.animation = FuncAnimation(plt.gcf(), self.animate, interval=1000)
         plt.show()
@@ -577,7 +577,7 @@ class LightGraph:
 
     def __init__(self):
         self.x_axis = [0]
-        self.y_axis = [0]
+        self.y_axis = [LightList[0]]
 
         self.animation = FuncAnimation(plt.gcf(), self.animate, interval=1000)
         plt.show()

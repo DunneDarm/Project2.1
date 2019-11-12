@@ -7,11 +7,8 @@ from serialportconnection import *
 from tempRead import *
 import threading
 import time
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
 import matplotlib
 from lightRead import *
-import random
 from matplotlib.animation import FuncAnimation
 from matplotlib import style
 import matplotlib.pyplot as plt
@@ -53,11 +50,9 @@ class App(tk.Tk):
         self.light_rollout = 18
         self.light_pullup = 2
         self.max_rollout = 140
-        self.cur_temp = "unknown"
 
         self.frames = {}
-        for frame_class in (Login, Home, ControlPanel, Settings, ViewData,
-                            Distance, ConnectedUnits):
+        for frame_class in (Login, Home, ControlPanel, Settings, ViewData, ConnectedUnits):
             frame = frame_class(container, self)
             self.frames[frame_class] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -163,12 +158,6 @@ class Home(tk.Frame):
         divider = tk.Frame(self, height=1, bg="black")
         divider.pack(side="top", fill="x")
 
-        # Huidige temperatuur
-        temp_label = tk.Label(
-            self, text="Huidige temperatuur: " + str(controller.cur_temp) + " °C", bg="white smoke",
-            font=controller.tempfont, fg="grey40")
-        temp_label.place(x=120, y=11, anchor="center")
-
         if platform.system() == "Darwin":
             # Controle paneel button
             controlpanel_button = tk.Button(
@@ -233,11 +222,6 @@ class ControlPanel(tk.Frame):
         divider = tk.Frame(self, height=1, bg="black")
         divider.pack(side="top", fill="x")
 
-        # Huidige temperatuur
-        temp_label = tk.Label(self, text="Huidige temperatuur: " + str(controller.cur_temp) + " °C",
-                              bg="white smoke", font=controller.tempfont, fg="grey40")
-        temp_label.place(x=120, y=11, anchor="center")
-
         if platform.system() == "Darwin":
             # Scherm uitrollen
             rollout_button = tk.Button(
@@ -299,12 +283,6 @@ class Settings(tk.Frame):
 
         divider = tk.Frame(self, height=1, bg="black")
         divider.pack(side="top", fill="x")
-
-        # Huidige temperatuur
-        temp_label = tk.Label(
-            self, text="Huidige temperatuur: " + str(controller.cur_temp) + " °C",
-            bg="white smoke", font=controller.tempfont, fg="grey40")
-        temp_label.place(x=120, y=11, anchor="center")
 
         # Intellingen minimale temperatuur
         min_temp_entry = tk.Entry(self)
@@ -415,11 +393,6 @@ class ViewData(tk.Frame):
         divider = tk.Frame(self, height=1, bg="black")
         divider.pack(side="top", fill="x")
 
-        # Huidige temperatuur
-        temp_label = tk.Label(self, text="Huidige temperatuur: " + str(controller.cur_temp) + " °C",
-                              bg="white smoke", font=controller.tempfont, fg="grey40")
-        temp_label.place(x=120, y=11, anchor="center")
-
         if platform.system() == "Darwin":
             # Temperatuur bekijken
             temp_button = tk.Button(
@@ -427,7 +400,7 @@ class ViewData(tk.Frame):
                 highlightbackground="white smoke",
                 command=TemperatureGraph)
             temp_button.config(height=3, width=25)
-            temp_button.place(x=400, y=150, anchor="center")
+            temp_button.place(x=400, y=180, anchor="center")
 
             # Lichtintensiteit bekijken
             lightintensity_button = tk.Button(
@@ -435,14 +408,7 @@ class ViewData(tk.Frame):
                 highlightbackground="white smoke",
                 command=LightGraph)
             lightintensity_button.config(height=3, width=25)
-            lightintensity_button.place(x=400, y=250, anchor="center")
-
-            # Afstand bekijken
-            distance_button = tk.Button(
-                self, text="Afstand", font=(None, 18, 'bold'), highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Distance))
-            distance_button.config(height=3, width=25)
-            distance_button.place(x=400, y=350, anchor="center")
+            lightintensity_button.place(x=400, y=330, anchor="center")
 
             # Terug naar homepagina
             back_button = tk.Button(
@@ -461,7 +427,7 @@ class ViewData(tk.Frame):
                 highlightbackground="white smoke",
                 command=TemperatureGraph)
             temp_button.config(height=2, width=20)
-            temp_button.place(x=400, y=125, anchor="center")
+            temp_button.place(x=400, y=180, anchor="center")
 
             # Lichtintensiteit bekijken
             lightintensity_button = tk.Button(
@@ -469,14 +435,7 @@ class ViewData(tk.Frame):
                 highlightbackground="white smoke",
                 command=LightGraph)
             lightintensity_button.config(height=2, width=20)
-            lightintensity_button.place(x=400, y=250, anchor="center")
-
-            # Afstand bekijken
-            distance_button = tk.Button(
-                self, text="Afstand", font=(None, 18, 'bold'), highlightbackground="white smoke",
-                command=lambda: controller.show_frame(Distance))
-            distance_button.config(height=2, width=20)
-            distance_button.place(x=400, y=375, anchor="center")
+            lightintensity_button.place(x=400, y=355, anchor="center")
 
             # Terug naar homepagina
             back_button = tk.Button(
@@ -516,57 +475,6 @@ class TemperatureGraph:
         plt.gcf().canvas.set_window_title('Temperatuur grafiek')
         plt.ylabel('Temperatuur in °C')
         plt.xlabel('Meetmoment')
-
-
-class Distance(tk.Frame):
-    """Bevat een grafiek van de uitgerolde afstand van het zonnescherm"""
-
-    def __init__(self, parent, controller, Temp = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-        self.rollout = controller.temp_rollout
-        self.Distance = TempList
-
-        self.figure = Figure(figsize=(8, 5), dpi=100)
-        self.plt = self.figure.add_subplot(1, 1, 1)
-
-        #De waarden die in de grafiek moeten
-        self.x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-        y = self.Distance
-
-        #Limit de waarden tot 20 wanneer er meer zijn.
-        self.x = self.x[0:20]  # Pak alleen 20 waarden
-        y = y[0:20]
-
-        #Set the y-ax
-        self.plt.set_ylim([min(TempList) - 1, max(TempList) + 1])
-
-        #Basic plot for when there are no new values
-        self.line = self.plt.plot(self.x, y, color="blue", linestyle="-")[0]
-
-        self.canvas = FigureCanvasTkAgg(self.figure, self)
-
-        self.canvas.get_tk_widget().grid(row=0, column=0)
-
-        # Labels
-        title = tk.Label(self, text="Gemeten temperatuur", font=(
-            None, 18, 'bold'))
-        title.place(x=400, y=20, anchor="center")
-
-        blue_line = tk.Label(self, text="Gemeten temperatuur", fg="blue")
-        blue_line.place(x=725, y=15, anchor="e")
-
-        y_label = tk.Label(self, text="Temperatuur")
-        y_label.place(x=15, y=15)
-
-        x_label = tk.Label(self, text="Meetmoment")
-        x_label.place(x=725, y=485, anchor="e")
-
-        # Homepagina button
-        back_button = tk.Button(
-            self, text="⬅ Bekijk data", highlightbackground="white smoke",
-            command=lambda: controller.show_frame(ViewData))
-        back_button.place(x=15, y=465)
 
 
 class LightGraph:
@@ -649,6 +557,7 @@ def TempMaker():
             ConnectionSetup()
             print("Temperature detection unit not available")
 
+
 def LightMaker():
     global LightList
     time.sleep(2)
@@ -691,6 +600,7 @@ def ConnectionSetup():
             TempPort = arduino
         if "L" in str(Value)[2:-1]:
             LightPort = arduino
+
 
 if __name__ == "__main__":
     TempList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

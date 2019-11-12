@@ -17,6 +17,7 @@ from matplotlib import style
 import matplotlib.pyplot as plt
 matplotlib.use("TkAgg")
 plt.rcParams['toolbar'] = 'None'
+style.use("ggplot")
 
 
 global TempPort
@@ -24,12 +25,6 @@ global LightPort
 global TempList
 global ConnectList
 global LightList
-
-# Grafiekfuncs
-style.use("ggplot")
-
-f = Figure(figsize=(5, 5), dpi=100, facecolor="Azure")
-a = f.add_subplot(111)
 
 
 class App(tk.Tk):
@@ -522,6 +517,7 @@ class TemperatureGraph:
         plt.ylabel('Temperatuur in °C')
         plt.xlabel('Meetmoment')
 
+
 class Distance(tk.Frame):
     """Bevat een grafiek van de uitgerolde afstand van het zonnescherm"""
 
@@ -572,6 +568,7 @@ class Distance(tk.Frame):
             command=lambda: controller.show_frame(ViewData))
         back_button.place(x=15, y=465)
 
+
 class LightGraph:
     """Schetst een grafiek van de gemeten lichtintensiteit"""
 
@@ -598,6 +595,7 @@ class LightGraph:
         plt.gcf().canvas.set_window_title('Lichtintensiteit grafiek')
         plt.ylabel('Lichtintensiteit in Lumen')
         plt.xlabel('Meetmoment')
+
 
 class ConnectedUnits(tk.Frame):
     """Bevat een tabel met alle aangesloten besturings een heden"""
@@ -638,6 +636,7 @@ class ConnectedUnits(tk.Frame):
                 command=lambda: controller.show_frame(Settings))
             back_button.place(x=700, y=465, anchor="center")
 
+
 def TempMaker():
     global TempList
     time.sleep(3)
@@ -649,6 +648,7 @@ def TempMaker():
         except:
             print("Temperature OOF")
             break
+
 
 def LightMaker():
     global LightList
@@ -662,12 +662,14 @@ def LightMaker():
             print("Light OOF")
             break
 
+
 def ThreadSetup():
     TempThread = threading.Thread(target=TempMaker, args=(), daemon=True)
     TempThread.start()
 
     LightThread = threading.Thread(target=LightMaker, args=(), daemon=True)
     LightThread.start()
+
 
 def ConnectionSetup():
     global TempPort
